@@ -37,7 +37,7 @@ import { CommitActivityWidget } from "@/widgets/commit-activity"
 import { CommitHourlyHeatmapWidget } from "@/widgets/commit-hourly-heatmap"
 import { CommitTopAuthorsWidget } from "@/widgets/commit-top-authors"
 
-const KPI_RANGE = "1m" as const
+const KPI_RANGE = "1y" as const
 
 const numberFormatter = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0,
