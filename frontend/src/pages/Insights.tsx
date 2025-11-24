@@ -23,7 +23,7 @@ import { InsightsFeedWidget } from "@/widgets/insights-feed"
 const getDefaultRange = () => {
   const until = new Date()
   const since = new Date(until)
-  since.setDate(until.getDate() - 29)
+  since.setFullYear(until.getFullYear() - 1)
   return { since, until }
 }
 
