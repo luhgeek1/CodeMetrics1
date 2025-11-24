@@ -89,7 +89,7 @@ export function TimelineOverviewWidget({
   const kpiCards = React.useMemo<SectionCard[]>(() => {
     if (!data) return []
 
-    const { kpi, series } = data
+    const { kpi } = data
     const peakDayLabel = kpi.peakDay
       ? periodFormatter.format(new Date(kpi.peakDay))
       : "—"
@@ -98,7 +98,6 @@ export function TimelineOverviewWidget({
         ? `${String(kpi.peakHour).padStart(2, "0")}:00`
         : "—"
     const offhoursPct = Math.max(0, kpi.offhoursPct ?? 0)
-    const activeDays = series.daily.filter((point) => point.count > 0).length
 
     return [
       {
@@ -116,11 +115,6 @@ export function TimelineOverviewWidget({
         id: "timeline-active-repos",
         label: "Активных репозиториев",
         value: numberFormatter.format(kpi.activeRepositories),
-      },
-      {
-        id: "timeline-active-days",
-        label: "Дней с коммитами",
-        value: numberFormatter.format(activeDays),
       },
       {
         id: "timeline-peak-day",
