@@ -63,7 +63,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const reportCsrfMissing = useCallback((): void => {
-    setCsrfWarning("Не удалось получить CSRF-токен. Пожалуйста, выполните вход заново.");
+    // Скрываем баннер, чтобы не мешал на экране логина при отсутствии cookies
+    setCsrfWarning(null);
   }, []);
 
   const setSkipSessionRestore = useCallback((value: boolean): void => {
@@ -177,7 +178,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (!csrfToken) {
           console.log("[Auth] CSRF-токен не найден, прекращаем попытку восстановления.");
-          reportCsrfMissing();
           return;
         }
 
