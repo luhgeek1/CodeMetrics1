@@ -7,6 +7,7 @@ import path from "path"
 const STRIPE_PUBLISHABLE_KEY = "pk_test_51RxrAwPtCxyTWU2nOrPPJQU6pbhCKsox9yXMJfl9sE3BRuLDISQVpFgGtkqNAkJHhFyUvpzG6IYKUFZjKWawOTyx00nla8B24Y";
 
 export default defineConfig({
+  base: "/CodeMetrics1/",
   plugins: [tailwindcss(), react(), basicSsl()],
   resolve: {
     alias: {
