@@ -4,6 +4,7 @@
   publish = "dist"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/v1/*"
+  to = "https://codemetrics.fly.dev/api/v1/:splat"
   status = 200
+  force = true
