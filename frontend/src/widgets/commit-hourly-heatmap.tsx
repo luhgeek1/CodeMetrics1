@@ -2,7 +2,6 @@
 
 import * as React from "react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import { useMetricsSummary } from "@/entities/metrics"
 import {
   CommitHourlyHeatmapChart,
@@ -43,15 +42,8 @@ export function CommitHourlyHeatmapWidget({
   projectId,
   className,
 }: CommitHourlyHeatmapWidgetProps) {
-  const isMobile = useIsMobile()
   const [range, setRange] =
     React.useState<CommitTimeRange>(DEFAULT_RANGE)
-
-  React.useEffect(() => {
-    if (isMobile && range !== "7d") {
-      setRange("7d")
-    }
-  }, [isMobile, range])
 
   const { since, until } = React.useMemo(
     () => getMetricsRangeBounds(range),

@@ -4,7 +4,6 @@ import * as React from "react"
 
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import {
   CommitTopAuthorsChart,
   type CommitTimeRange,
@@ -43,16 +42,7 @@ export function CommitTopAuthorsWidget({
   projectId,
   className,
 }: CommitTopAuthorsWidgetProps) {
-  const isMobile = useIsMobile()
   const [range, setRange] = React.useState<CommitTimeRange>(DEFAULT_RANGE)
-
-  React.useEffect(() => {
-    if (isMobile) {
-      const mobileRange =
-        rangeOptions[rangeOptions.length - 1]?.value ?? DEFAULT_RANGE
-      setRange(mobileRange)
-    }
-  }, [isMobile])
 
   const { since, until } = React.useMemo(
     () => getMetricsRangeBounds(range),

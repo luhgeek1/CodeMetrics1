@@ -2,7 +2,6 @@
 
 import * as React from "react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import { useMetricsSummary } from "@/entities/metrics"
 import {
   activityRangeOptions,
@@ -39,14 +38,7 @@ export function CommitActivityWidget({
   projectId,
   className,
 }: CommitActivityWidgetProps) {
-  const isMobile = useIsMobile()
   const [range, setRange] = React.useState<ActivityRange>(DEFAULT_RANGE)
-
-  React.useEffect(() => {
-    if (isMobile && range !== "7d") {
-      setRange("7d")
-    }
-  }, [isMobile, range])
 
   const { since, until } = React.useMemo(
     () => getMetricsRangeBounds(range),
