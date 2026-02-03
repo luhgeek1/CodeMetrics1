@@ -91,7 +91,7 @@ export default function AuthPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4 py-12 text-white overflow-hidden">
+    <div className="min-h-screen min-h-svh bg-neutral-950 flex items-center justify-center px-4 py-12 text-white overflow-hidden">
       <motion.div
         className="absolute inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
