@@ -5,7 +5,7 @@
 
 [[redirects]]
   from = "/api/v1/*"
-  to = "https://codemetrics.fly.dev/api/v1/:splat"
+  to = "https://codemetrics-backend.fly.dev/api/v1/:splat"
   status = 200
   force = true
 
