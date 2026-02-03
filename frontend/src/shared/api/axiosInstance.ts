@@ -10,10 +10,8 @@ import type { AuthTokens } from "@/entities/auth/model";
 import { withBasePath } from "@/shared/lib/utils";
 import { resolveCsrfToken } from "../lib/csrf";
 const DEFAULT_API_PATH = "/api/v1";
-const BASE_URL = withBasePath(
-  import.meta.env.VITE_API_BASE_URL as string | undefined,
-  DEFAULT_API_PATH
-);
+const ENV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+const BASE_URL = import.meta.env.DEV ? DEFAULT_API_PATH : withBasePath(ENV_API_BASE_URL, DEFAULT_API_PATH);
 
 export const apiPublic: AxiosInstance = axios.create({
   baseURL: BASE_URL,
