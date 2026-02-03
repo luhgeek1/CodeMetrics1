@@ -21,7 +21,7 @@ export default defineConfig({
     https: {},
     proxy: {
       "/api/v1": {
-        target: "https://codemetrics.fly.dev/",
+        target: "https://codemetrics-backend.fly.dev/",
         changeOrigin: true,
         secure: true,
         followRedirects: true
