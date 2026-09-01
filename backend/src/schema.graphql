@@ -1,0 +1,330 @@
+# Public response contracts retain REST field names for compatibility.
+scalar JSON
+
+type AuthorActivityRow {
+  author_id: String!
+  commits: Int!
+  lines: Int!
+  share_pct: Float!
+  git_name: String
+  git_email: String
+}
+
+type AuthorRef {
+  id: String!
+  name: String!
+  email: String
+}
+
+type BranchOut {
+  id: String!
+  name: String!
+  is_default: Boolean!
+  is_protected: Boolean!
+}
+
+type CommitFeed {
+  items: [CommitSummary!]!
+  next_cursor: String
+}
+
+type CommitOut {
+  sha: String!
+  repo: RepoRef!
+  author: AuthorRef!
+  committer: AuthorRef
+  committed_at: String!
+  message: String!
+  is_merge: Boolean!
+  added_lines: Int!
+  deleted_lines: Int!
+  files_changed: Int!
+}
+
+type CommitSeriesPoint {
+  date: String!
+  count: Int!
+}
+
+type CommitSizeStats {
+  mean: Float
+  median: Float
+}
+
+type CommitSummary {
+  sha: String!
+  repo: RepoRefSummary!
+  author: PersonRef!
+  committer: PersonRef
+  committed_at: String!
+  message: String!
+  is_merge: Boolean!
+  added_lines: Int!
+  deleted_lines: Int!
+  files_changed: Int!
+}
+
+type DashboardSeries {
+  commits_daily: [CommitSeriesPoint!]!
+  by_hour: [HourHeatmapPointOut!]!
+  by_weekday: [WeekdayHeatmapPointOut!]!
+  size_hist: [SizeBucketPoint!]!
+}
+
+type DashboardSummary {
+  kpi: KPIBlock!
+  series: DashboardSeries!
+  authors_top: [TopAuthorRowOut!]!
+  latest_commits: [CommitSummary!]!
+  recommendations: [InsightRecommendation!]!
+}
+
+type DeveloperDetailSummary {
+  kpi: KPIBlock!
+  series: DashboardSeries!
+  size_hist: [SizeBucketPoint!]!
+  latest_commits: CommitFeed!
+  recommendations: [InsightRecommendation!]!
+}
+
+type DevelopersSummary {
+  kpi: KPIBlock!
+  authors: [AuthorActivityRow!]!
+}
+
+type HourHeatmapPointOut {
+  hour: Int!
+  commits: Int!
+  share_pct: Float!
+  lines_added: Int!
+  lines_deleted: Int!
+}
+
+type InsightRecommendation {
+  id: String!
+  title: String!
+  description: String!
+  severity: String!
+}
+
+type KPIBlock {
+  commits: Int!
+  active_devs: Int!
+  active_repos: Int!
+  avg_commit_size: CommitSizeStats!
+  msg_quality: MessageQualityBlock!
+}
+
+type LanguageModel {
+  code: String!
+  name_ru: String!
+  name_en: String!
+}
+
+type MessageQualityBlock {
+  avg_length: Float!
+  short_pct: Float!
+}
+
+type BranchPage {
+  items: [BranchOut!]!
+  next_cursor: String
+}
+
+type CommitPage {
+  items: [CommitOut!]!
+  next_cursor: String
+}
+
+type PersonRef {
+  id: String
+  name: String
+  email: String
+}
+
+type ProjectOut {
+  id: Int!
+  name: String!
+  full_name: String!
+  description: String
+  is_public: Boolean!
+  repo_count: Int!
+  last_activity_at: String
+}
+
+type RepoRef {
+  project_key: String!
+  name: String!
+}
+
+type RepoRefSummary {
+  id: String!
+  project_id: Int!
+  name: String!
+}
+
+type RepositoryOut {
+  id: String!
+  project_id: Int!
+  name: String!
+  default_branch: String
+  description: String
+  updated_at: String
+}
+
+type SizeBucketPoint {
+  bucket: String!
+  count: Int!
+}
+
+type TimelineKPI {
+  commits: Int!
+  active_devs: Int!
+  active_repos: Int!
+  avg_commit_size: CommitSizeStats!
+  msg_quality: MessageQualityBlock!
+  peak_day: String
+  peak_hour: Int
+  offhours_pct: Float!
+}
+
+type TimelineSummary {
+  kpi: TimelineKPI!
+  series: DashboardSeries!
+}
+
+type TokenPair {
+  access_token: String!
+  refresh_token: String
+}
+
+type TopAuthorRowOut {
+  author_id: String!
+  commits: Int!
+  lines: Int!
+  share_pct: Float!
+  git_name: String
+  git_email: String
+}
+
+input UserLogin {
+  email: String!
+  password: String!
+}
+
+type UserModel {
+  created_at: String!
+  updated_at: String
+  id: String!
+  email: String!
+  username: String
+  profile_pic_url: String
+  bio: String
+  birth_date: String
+  age: Int
+  language_code: String
+  is_onboarded: Boolean!
+  banned: Boolean!
+  role_slugs: [String!]!
+  permission_slugs: [String!]!
+}
+
+input UserPatch {
+  username: String
+  profile_pic_url: String
+  bio: String
+  birth_date: String
+  language_code: String
+}
+
+input UserRegister {
+  email: String!
+  password: String!
+  username: String
+}
+
+type WeekdayHeatmapPointOut {
+  weekday: Int!
+  commits: Int!
+  share_pct: Float!
+}
+
+input MetricsFilter {
+  since: String!
+  until: String!
+  project_id: Int
+  repo_ids: [String!]
+  author_ids: [String!]
+}
+input PageInput {
+  limit: Int = 50
+  cursor: String
+  after: String
+}
+input AdminUsersInput {
+  banned: Boolean
+  search: String
+  limit: Int = 50
+  cursor: String
+}
+type UserPage {
+  items: [UserModel!]!
+  next_cursor: String
+}
+type RegistrationPoint {
+  day: String!
+  count: Int!
+}
+type Health {
+  status: String!
+}
+type SyncStatus {
+  state: String!
+  started_at: String
+  finished_at: String
+  error: String
+  projects: Int!
+  repositories: Int!
+  commits: Int!
+}
+
+type Query {
+  health: Health!
+  me: UserModel!
+  languages(query: String = "", limit: Int): [LanguageModel!]!
+  projects: [ProjectOut!]!
+  project(id: Int!): ProjectOut!
+  repositories(projectId: Int!): [RepositoryOut!]!
+  branches(repoId: String!, page: PageInput): BranchPage!
+  repositoryCommits(repoId: String!, page: PageInput): CommitPage!
+  metricsSummary(
+    filter: MetricsFilter!
+    latestLimit: Int = 10
+  ): DashboardSummary!
+  timelineSummary(filter: MetricsFilter!): TimelineSummary!
+  developersSummary(filter: MetricsFilter!): DevelopersSummary!
+  developerSummary(
+    authorId: String!
+    filter: MetricsFilter!
+    page: PageInput
+  ): DeveloperDetailSummary!
+  developerCommits(
+    authorId: String!
+    filter: MetricsFilter!
+    page: PageInput
+  ): CommitFeed!
+  insights(filter: MetricsFilter!): [InsightRecommendation!]!
+  adminUsers(input: AdminUsersInput): UserPage!
+  registrations(days: Int = 30): [RegistrationPoint!]!
+  syncStatus: SyncStatus!
+}
+type Mutation {
+  register(input: UserRegister!, client: String = "web"): TokenPair!
+  login(input: UserLogin!, client: String = "web"): TokenPair!
+  refresh(refreshToken: String, csrfToken: String): TokenPair!
+  logout(refreshToken: String, csrfToken: String): Boolean!
+  updateProfile(input: UserPatch!): UserModel!
+  setUserBan(userId: String!, banned: Boolean!): UserModel!
+  setUserRoles(userId: String!, roles: [String!]!): UserModel!
+  syncSource: SyncStatus!
+}

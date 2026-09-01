@@ -1,0 +1,313 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AuthorDay {
+  day           DateTime   @db.Date
+  projectId     Int        @map("project_id")
+  repoId        String     @map("repo_id") @db.Uuid
+  authorId      String     @map("author_id") @db.Uuid
+  commits       Int
+  linesAdded    Int        @map("lines_added")
+  linesDeleted  Int        @map("lines_deleted")
+  filesChanged  Int        @map("files_changed")
+  msgTotalLen   Int        @map("msg_total_len")
+  msgShortCount Int        @map("msg_short_count")
+  author        Author     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  repository    Repository @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([day, repoId, authorId])
+  @@index([authorId, day], map: "idx_ard_author_day")
+  @@index([projectId, day], map: "idx_ard_project_day")
+  @@map("agg_author_repo_day")
+}
+
+model FileDay {
+  day          DateTime   @db.Date
+  projectId    Int        @map("project_id")
+  repoId       String     @map("repo_id") @db.Uuid
+  path         String
+  commitsTouch Int        @map("commits_touch")
+  linesAdded   Int        @map("lines_added")
+  linesDeleted Int        @map("lines_deleted")
+  churn        Int
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  repository   Repository @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([day, repoId, path])
+  @@index([repoId, churn], map: "idx_afrd_churn")
+  @@index([projectId, day], map: "idx_afrd_project_day")
+  @@map("agg_file_repo_day")
+}
+
+model HourDay {
+  day          DateTime   @db.Date
+  projectId    Int        @map("project_id")
+  repoId       String     @map("repo_id") @db.Uuid
+  hour         Int        @db.SmallInt
+  commits      Int
+  linesAdded   Int        @map("lines_added")
+  linesDeleted Int        @map("lines_deleted")
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  repository   Repository @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([day, repoId, hour])
+  @@index([projectId, day], map: "idx_ahrd_project_day")
+  @@map("agg_hour_repo_day")
+}
+
+model SizeDay {
+  day        DateTime   @db.Date
+  projectId  Int        @map("project_id")
+  repoId     String     @map("repo_id") @db.Uuid
+  bucket     SizeBucket
+  cnt        Int
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  repository Repository @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([day, repoId, bucket])
+  @@index([projectId, day], map: "idx_asbrd_project_day")
+  @@map("agg_size_bucket_repo_day")
+}
+
+model LegacyMigration {
+  versionNum String @id(map: "alembic_version_pkc") @map("version_num") @db.VarChar(32)
+
+  @@map("alembic_version")
+  @@ignore
+}
+
+model Author {
+  id               String      @id @default(uuid()) @db.Uuid
+  gitName          String      @map("git_name") @db.VarChar
+  gitEmail         String      @map("git_email") @db.VarChar
+  emailNormalized  String      @unique @map("email_normalized") @db.VarChar
+  firstCommitAt    DateTime?   @map("first_commit_at") @db.Timestamptz(6)
+  lastCommitAt     DateTime?   @map("last_commit_at") @db.Timestamptz(6)
+  authorDays       AuthorDay[]
+  authoredCommits  Commit[]    @relation("commits_author_idToauthors")
+  committedCommits Commit[]    @relation("commits_committer_idToauthors")
+
+  @@map("authors")
+}
+
+model Branch {
+  id          String     @id @default(uuid()) @db.Uuid
+  repoId      String     @map("repo_id") @db.Uuid
+  name        String     @db.VarChar
+  isDefault   Boolean    @map("is_default")
+  isProtected Boolean    @map("is_protected")
+  updatedAt   DateTime?  @map("updated_at") @db.Timestamptz(6)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  repository  Repository @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([repoId, name], map: "uq_branch_repo_name")
+  @@map("branches")
+}
+
+model CommitFile {
+  changeId     String  @id @default(uuid()) @map("change_id") @db.Uuid
+  commitSha    String  @map("commit_sha") @db.VarChar
+  filePath     String  @map("file_path")
+  addedLines   Int     @map("added_lines")
+  deletedLines Int     @map("deleted_lines")
+  status       String  @db.VarChar
+  patch        String?
+  isBinary     Boolean @map("is_binary")
+  commit       Commit  @relation(fields: [commitSha], references: [sha], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("commit_files")
+}
+
+model Commit {
+  sha            String       @id @db.VarChar
+  repoId         String       @map("repo_id") @db.Uuid
+  authorId       String?      @map("author_id") @db.Uuid
+  committerId    String?      @map("committer_id") @db.Uuid
+  message        String
+  branchNames    String[]     @map("branch_names") @db.VarChar
+  tagNames       String[]     @map("tag_names") @db.VarChar
+  addedLines     Int          @map("added_lines")
+  deletedLines   Int          @map("deleted_lines")
+  isMergeCommit  Boolean      @map("is_merge_commit")
+  diffContent    String?      @map("diff_content")
+  createdAt      DateTime     @map("created_at") @db.Timestamptz(6)
+  committedAt    DateTime?    @map("committed_at") @db.Timestamptz(6)
+  authorName     String       @map("author_name") @db.VarChar
+  authorEmail    String       @map("author_email") @db.VarChar
+  committerName  String?      @map("committer_name") @db.VarChar
+  committerEmail String?      @map("committer_email") @db.VarChar
+  issues         Json
+  parents        String[]     @db.VarChar
+  oldTagNames    String[]     @map("old_tag_names") @db.VarChar
+  files          CommitFile[]
+  author         Author?      @relation("commits_author_idToauthors", fields: [authorId], references: [id], onUpdate: NoAction)
+  committer      Author?      @relation("commits_committer_idToauthors", fields: [committerId], references: [id], onUpdate: NoAction)
+  repository     Repository   @relation(fields: [repoId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("commits")
+}
+
+model Language {
+  code   String @id @db.VarChar(2)
+  nameRu String @map("name_ru") @db.VarChar
+  nameEn String @map("name_en") @db.VarChar
+  users  User[]
+
+  @@index([nameEn(ops: raw("gin_trgm_ops"))], map: "languages_name_en_trgm", type: Gin)
+  @@index([nameRu(ops: raw("gin_trgm_ops"))], map: "languages_name_ru_trgm", type: Gin)
+  @@map("languages")
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  slug            String           @unique @db.VarChar(128)
+  name            String           @db.VarChar(128)
+  description     String?
+  updatedAt       DateTime?        @map("updated_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model Project {
+  id           Int          @id @default(autoincrement())
+  name         String       @unique @db.VarChar
+  fullName     String       @map("full_name")
+  description  String?
+  parentId     Int?         @map("parent_id")
+  permissions  Json
+  createdAt    DateTime?    @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime?    @map("updated_at") @db.Timestamptz(6)
+  isPublic     Boolean      @default(false) @map("is_public")
+  lfsAllow     Boolean      @default(false) @map("lfs_allow")
+  isFavorite   Boolean      @default(false) @map("is_favorite")
+  authorDays   AuthorDay[]
+  fileDays     FileDay[]
+  hourDays     HourDay[]
+  sizeDays     SizeDay[]
+  project      Project?     @relation("projectsToprojects", fields: [parentId], references: [id], onUpdate: NoAction)
+  children     Project[]    @relation("projectsToprojects")
+  repositories Repository[]
+
+  @@map("projects")
+}
+
+model Repository {
+  id            String      @id @default(uuid()) @db.Uuid
+  projectId     Int         @map("project_id")
+  name          String      @db.VarChar
+  topics        String[]    @db.VarChar
+  description   String?
+  defaultBranch String?     @map("default_branch") @db.VarChar
+  permissions   Json
+  createdAt     DateTime?   @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime?   @map("updated_at") @db.Timestamptz(6)
+  authorDays    AuthorDay[]
+  fileDays      FileDay[]
+  hourDays      HourDay[]
+  sizeDays      SizeDay[]
+  branches      Branch[]
+  commits       Commit[]
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([projectId, name], map: "uq_repository_project_name")
+  @@map("repositories")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([roleId, permissionId], map: "uq_role_permission")
+  @@map("role_permissions")
+}
+
+model Role {
+  id              String           @id @default(uuid()) @db.Uuid
+  slug            String           @unique @db.VarChar(64)
+  name            String           @db.VarChar(128)
+  description     String?
+  updatedAt       DateTime?        @map("updated_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, roleId], map: "uq_user_role")
+  @@index([roleId], map: "ix_user_roles_role_id")
+  @@map("user_roles")
+}
+
+model User {
+  id            String           @id @default(uuid()) @db.Uuid
+  email         String           @unique @db.VarChar
+  passwordHash  String           @map("password_hash")
+  confirmedAt   DateTime?        @map("confirmed_at") @db.Timestamptz(6)
+  username      String?          @db.VarChar
+  profilePicUrl String?          @map("profile_pic_url") @db.VarChar
+  bio           String?          @db.VarChar
+  birthDate     DateTime?        @map("birth_date") @db.Date
+  languageCode  String?          @map("language_code") @db.VarChar(2)
+  isOnboarded   Boolean          @map("is_onboarded")
+  banned        Boolean
+  updatedAt     DateTime?        @map("updated_at") @db.Timestamptz(6)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  authVersion   Int              @default(1) @map("auth_version")
+  userRoles     UserRole[]
+  language      Language?        @relation(fields: [languageCode], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  sessions      RefreshSession[]
+
+  @@index([email(ops: raw("gin_trgm_ops"))], map: "users_email_trgm", type: Gin)
+  @@index([username(ops: raw("gin_trgm_ops"))], map: "users_username_trgm", type: Gin)
+  @@map("users")
+}
+
+enum SizeBucket {
+  ZERO_TEN
+  ELEVEN_FIFTY
+  FIFTY_ONE_HUNDRED
+  HUNDRED_PLUS
+
+  @@map("size_bucket")
+}
+
+model RefreshSession {
+  id          String    @id
+  userId      String    @map("user_id") @db.Uuid
+  source      String
+  authVersion Int       @map("auth_version")
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
+}
+
+model AuthThrottle {
+  key       String   @id
+  hits      Int
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@map("auth_throttles")
+}
