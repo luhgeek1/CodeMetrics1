@@ -1,22 +1,20 @@
+name: codemetrics1
+
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend
+    build: ./backend
     env_file:
       - ./backend/.env
     environment:
-      STAGE: prod
+      NODE_ENV: production
       API_HOST: 0.0.0.0
       API_PORT: 8080
-      SITE_URL: https://localhost
-      DATABASE_URL: postgresql+asyncpg://postgres:secret@db:5432/hackathon
-      REDIS_URL: redis://redis:6379/0
+      SITE_URL: https://localhost:${HTTPS_PORT:-8443}
+      DATABASE_URL: postgresql://postgres:secret@db:5432/hackathon
+    ports:
+      - "127.0.0.1:${API_PORT:-18080}:8080"
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     restart: unless-stopped
 
@@ -25,20 +23,19 @@ services:
       context: .
       dockerfile: nginx/Dockerfile
       args:
-        VITE_API_BASE_URL: https://localhost
-        VITE_ENABLE_HTTPS: "false"
-    container_name: nginx
+        VITE_API_BASE_URL: ""
+    environment:
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
     ports:
-      - "80:80"
-      - "443:443"
+      - "127.0.0.1:${HTTP_PORT:-8088}:80"
+      - "127.0.0.1:${HTTPS_PORT:-8443}:443"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   db:
     image: postgres:16-alpine
-    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
@@ -46,24 +43,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hackathon"]
       interval: 5s
       timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis_service
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      retries: 10
     restart: unless-stopped
 
 volumes:
   postgres_data:
-  redis_data:

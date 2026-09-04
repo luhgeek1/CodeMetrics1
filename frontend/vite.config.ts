@@ -19,8 +19,12 @@ export default defineConfig({
   server: {
     https: {},
     proxy: {
+      "/graphql": {
+        target: "http://localhost:18080",
+        changeOrigin: true,
+      },
       "/api/v1": {
-        target: "https://codemetrics-backend.fly.dev/",
+        target: "http://localhost:18080",
         changeOrigin: true,
         secure: true,
         followRedirects: true
