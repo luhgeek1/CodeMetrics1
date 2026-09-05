@@ -1,0 +1,30 @@
+{
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testMatch": [
+    "<rootDir>/test/e2e/**/*.spec.ts"
+  ],
+  "testTimeout": 60000,
+  "transform": {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "rootDir": ".",
+          "esModuleInterop": true,
+          "experimentalDecorators": true,
+          "emitDecoratorMetadata": true,
+          "module": "ESNext",
+          "moduleResolution": "Bundler"
+        },
+        "useESM": true
+      }
+    ]
+  },
+  "extensionsToTreatAsEsm": [
+    ".ts"
+  ],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
+}
